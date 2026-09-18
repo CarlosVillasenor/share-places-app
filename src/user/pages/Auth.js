@@ -1,33 +1,35 @@
-import React, { useState, useContext } from 'react';
-
-import Card from '../../shared/components/UIElements/Card';
-import Input from '../../shared/components/FormElements/Input';
-import Button from '../../shared/components/FormElements/Button';
+import React, { useState, useContext } from "react";
+import Card from "../../shared/components/UIElements/Card";
+import Input from "../../shared/components/FormElements/Input";
+import Button from "../../shared/components/FormElements/Button";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import {
   VALIDATOR_EMAIL,
   VALIDATOR_MINLENGTH,
-  VALIDATOR_REQUIRE
-} from '../../shared/util/validators';
-import { useForm } from '../../shared/hooks/form-hook';
-import { AuthContext } from '../../shared/context/auth-context';
-import './Auth.css';
+  VALIDATOR_REQUIRE,
+} from "../../shared/util/validators";
+import { useForm } from "../../shared/hooks/form-hook";
+import { AuthContext } from "../../shared/context/auth-context";
+import "./Auth.css";
 
 const Auth = () => {
   const auth = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
   const [formState, inputHandler, setFormData] = useForm(
     {
       email: {
-        value: '',
-        isValid: false
+        value: "",
+        isValid: false,
       },
       password: {
-        value: '',
-        isValid: false
-      }
+        value: "",
+        isValid: false,
+      },
     },
-    false
+    false,
   );
 
   const switchModeHandler = () => {
@@ -35,34 +37,76 @@ const Auth = () => {
       setFormData(
         {
           ...formState.inputs,
-          name: undefined
+          name: undefined,
         },
-        formState.inputs.email.isValid && formState.inputs.password.isValid
+        formState.inputs.email.isValid && formState.inputs.password.isValid,
       );
     } else {
       setFormData(
         {
           ...formState.inputs,
           name: {
-            value: '',
-            isValid: false
-          }
+            value: "",
+            isValid: false,
+          },
         },
-        false
+        false,
       );
     }
-    setIsLoginMode(prevMode => !prevMode);
+    setIsLoginMode((prevMode) => !prevMode);
   };
 
-  const authSubmitHandler = event => {
+  const authSubmitHandler = async (event) => {
     event.preventDefault();
     console.log(formState.inputs);
-    auth.login();
+
+    if (isLoginMode) {
+      // Handle login logic here
+    } else {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch("http://localhost:5000/api/users/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formState.inputs.name.value,
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+        });
+
+        const responseData = await response.json();
+        console.log(responseData);
+
+        if (response.ok) {
+          setIsLoading(false);
+          auth.login();
+        } else {
+          setIsLoading(false);
+          setError(responseData.message || "Something went wrong, please try again.");
+        }
+      } catch (err) {
+        console.error(err);
+        setIsLoading(false);
+        setError(err.message || "Something went wrong, please try again.");
+      }
+    }
+    setIsLoading(false);
+  };
+
+  const errorHandler = () => {
+    setError(null);
   };
 
   return (
-    <Card className="authentication">
+    <>
+      {error && <ErrorModal error={error} onClear={errorHandler} />}
+      <Card className="authentication">
       <h2>Login Required</h2>
+      {isLoading && <LoadingSpinner asOverlay />}
       <hr />
       <form onSubmit={authSubmitHandler}>
         {!isLoginMode && (
@@ -95,13 +139,14 @@ const Auth = () => {
           onInput={inputHandler}
         />
         <Button type="submit" disabled={!formState.isValid}>
-          {isLoginMode ? 'LOGIN' : 'SIGNUP'}
+          {isLoginMode ? "LOGIN" : "SIGNUP"}
         </Button>
       </form>
       <Button inverse onClick={switchModeHandler}>
-        SWITCH TO {isLoginMode ? 'SIGNUP' : 'LOGIN'}
+        SWITCH TO {isLoginMode ? "SIGNUP" : "LOGIN"}
       </Button>
-    </Card>
+      </Card>
+    </>
   );
 };
 
