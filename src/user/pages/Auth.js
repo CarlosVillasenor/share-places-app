@@ -59,13 +59,37 @@ const Auth = () => {
   const authSubmitHandler = async (event) => {
     event.preventDefault();
     console.log(formState.inputs);
+    setIsLoading(true);
 
     if (isLoginMode) {
-      // Handle login logic here
+      try {
+        const response = await fetch("http://localhost:5000/api/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            responseData.message || "Something went wrong, please try again.",
+          );
+        }
+
+        setIsLoading(false);
+        auth.login();
+      } catch (err) {
+        setIsLoading(false);
+        setError(err.message || "Something went wrong, please try again.");
+      }
     } else {
       try {
-        setIsLoading(true);
-        setError(null);
         const response = await fetch("http://localhost:5000/api/users/signup", {
           method: "POST",
           headers: {
@@ -79,15 +103,15 @@ const Auth = () => {
         });
 
         const responseData = await response.json();
-        console.log(responseData);
 
-        if (response.ok) {
-          setIsLoading(false);
-          auth.login();
-        } else {
-          setIsLoading(false);
-          setError(responseData.message || "Something went wrong, please try again.");
+        if (!response.ok) {
+          throw new Error(
+            responseData.message || "Something went wrong, please try again.",
+          );
         }
+
+        setIsLoading(false);
+        auth.login();
       } catch (err) {
         console.error(err);
         setIsLoading(false);
@@ -105,46 +129,46 @@ const Auth = () => {
     <>
       {error && <ErrorModal error={error} onClear={errorHandler} />}
       <Card className="authentication">
-      <h2>Login Required</h2>
-      {isLoading && <LoadingSpinner asOverlay />}
-      <hr />
-      <form onSubmit={authSubmitHandler}>
-        {!isLoginMode && (
+        <h2>Login Required</h2>
+        {isLoading && <LoadingSpinner asOverlay />}
+        <hr />
+        <form onSubmit={authSubmitHandler}>
+          {!isLoginMode && (
+            <Input
+              element="input"
+              id="name"
+              type="text"
+              label="Your Name"
+              validators={[VALIDATOR_REQUIRE()]}
+              errorText="Please enter a name."
+              onInput={inputHandler}
+            />
+          )}
           <Input
             element="input"
-            id="name"
-            type="text"
-            label="Your Name"
-            validators={[VALIDATOR_REQUIRE()]}
-            errorText="Please enter a name."
+            id="email"
+            type="email"
+            label="E-Mail"
+            validators={[VALIDATOR_EMAIL()]}
+            errorText="Please enter a valid email address."
             onInput={inputHandler}
           />
-        )}
-        <Input
-          element="input"
-          id="email"
-          type="email"
-          label="E-Mail"
-          validators={[VALIDATOR_EMAIL()]}
-          errorText="Please enter a valid email address."
-          onInput={inputHandler}
-        />
-        <Input
-          element="input"
-          id="password"
-          type="password"
-          label="Password"
-          validators={[VALIDATOR_MINLENGTH(5)]}
-          errorText="Please enter a valid password, at least 5 characters."
-          onInput={inputHandler}
-        />
-        <Button type="submit" disabled={!formState.isValid}>
-          {isLoginMode ? "LOGIN" : "SIGNUP"}
+          <Input
+            element="input"
+            id="password"
+            type="password"
+            label="Password"
+            validators={[VALIDATOR_MINLENGTH(5)]}
+            errorText="Please enter a valid password, at least 5 characters."
+            onInput={inputHandler}
+          />
+          <Button type="submit" disabled={!formState.isValid}>
+            {isLoginMode ? "LOGIN" : "SIGNUP"}
+          </Button>
+        </form>
+        <Button inverse onClick={switchModeHandler}>
+          SWITCH TO {isLoginMode ? "SIGNUP" : "LOGIN"}
         </Button>
-      </form>
-      <Button inverse onClick={switchModeHandler}>
-        SWITCH TO {isLoginMode ? "SIGNUP" : "LOGIN"}
-      </Button>
       </Card>
     </>
   );
