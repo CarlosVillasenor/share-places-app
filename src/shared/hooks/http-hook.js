@@ -15,6 +15,10 @@ export const useHttpClient = () => {
         const response = await fetch(url, { method, body, headers, signal: httpAbortCtrl.signal });
         const responseData = await response.json();
 
+        activeHttpRequests.current = activeHttpRequests.current.filter(
+          (reqCtrl) => reqCtrl !== httpAbortCtrl
+        );
+
         if (!response.ok) {
           throw new Error(responseData.message || "Failed to fetch.");
         }
@@ -26,7 +30,6 @@ export const useHttpClient = () => {
         setIsLoading(false);
         throw err;
       }
-
     },
     [],
   );
