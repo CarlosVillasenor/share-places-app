@@ -93,13 +93,9 @@ const Auth = () => {
     clearError();
   };
 
-  const errorHandler = () => {
-    clearError();
-  };
-
   return (
     <>
-      {error && <ErrorModal error={error} onClear={errorHandler} />}
+      {error && <ErrorModal error={error} onClear={clearError} />}
       <Card className="authentication">
         <h2>Login Required</h2>
         {isLoading && <LoadingSpinner asOverlay />}
