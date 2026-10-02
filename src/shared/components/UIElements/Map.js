@@ -1,27 +1,42 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import './Map.css';
 
-const Map = props => {
-  const mapRef = useRef();
-  
-  const { center, zoom } = props;
+const Map = ({ center, zoom, className, style }) => {
+  const mapRef = useRef(null);
 
   useEffect(() => {
+    if (!mapRef.current || !window.google?.maps) {
+      return;
+    }
+
+    const position = {
+      lat: Number(center?.latitude),
+      lng: Number(center?.longitude),
+    };
+
+    if (!Number.isFinite(position.lat) || !Number.isFinite(position.lng)) {
+      console.error('Invalid map center:', center);
+      return;
+    }
+
     const map = new window.google.maps.Map(mapRef.current, {
-      center: center,
-      zoom: zoom
+      center: position,
+      zoom,
     });
-  
-    new window.google.maps.Marker({ position: center, map: map });
-  }, [center, zoom]);  
+
+    new window.google.maps.Marker({
+      position,
+      map,
+    });
+  }, [center, zoom]);
 
   return (
     <div
       ref={mapRef}
-      className={`map ${props.className}`}
-      style={props.style}
-    ></div>
+      className={`map ${className ?? ''}`}
+      style={style}
+    />
   );
 };
 
