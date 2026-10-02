@@ -23,11 +23,12 @@ const Map = ({ center, zoom, className, style }) => {
     const map = new window.google.maps.Map(mapRef.current, {
       center: position,
       zoom,
+      mapId: 'DEMO_MAP_ID',
     });
 
-    new window.google.maps.Marker({
-      position,
+    new window.google.maps.marker.AdvancedMarkerElement({
       map,
+      position,
     });
   }, [center, zoom]);
 
