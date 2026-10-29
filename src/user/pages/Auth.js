@@ -3,6 +3,7 @@ import Card from "../../shared/components/UIElements/Card";
 import Input from "../../shared/components/FormElements/Input";
 import Button from "../../shared/components/FormElements/Button";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import {
   VALIDATOR_EMAIL,
@@ -88,7 +89,7 @@ const Auth = () => {
           }),
           {
             "Content-Type": "application/json",
-          }
+          },
         );
 
         auth.login(responseData.user.id);
@@ -116,6 +117,7 @@ const Auth = () => {
               onInput={inputHandler}
             />
           )}
+          {!isLoginMode && <ImageUpload center id="image" />}
           <Input
             element="input"
             id="email"
